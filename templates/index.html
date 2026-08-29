@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Último Minuto</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #f4f4f4; color: #333; }
+        h1 { color: #d32f2f; }
+        .noticia { background: white; padding: 15px; margin-bottom: 10px; border-left: 5px solid #d32f2f; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Noticias de Último Minuto</h1>
+    {% for noticia in noticias %}
+        <div class="noticia">
+            <p>{{ noticia }}</p>
+        </div>
+    {% else %}
+        <p>No hay noticias procesadas aún.</p>
+    {% endfor %}
+</body>
+</html>
