@@ -1,58 +1,38 @@
-const express = require('express');
+
+    const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const Stripe = require('stripe');
-const paypal = require('@paypal/checkout-server-sdk');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Almacenamiento temporal para el estado de las órdenes
-const ordersDB = new Map();
+// Configuración de Gemini IA
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || 'api_key_placeholder');
 
-// Middleware para capturar body raw en webhooks de Stripe
-app.use('/api/webhooks/stripe', express.raw({ type: 'application/json' }));
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Ruta principal para servir el HTML
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Configuración PayPal Live / Sandbox
-function getPaypalEnvironment() {
-  const clientId = process.env.BAA7nC6u6cTMvfz3EY4cIakGT8J6rxc_ZkHhtCtVuiUMbRBVnkZsoTFeZFjIW6si8B4MskAYKWPIPUowag;
-  const clientSecret = process.env.EM3_oaEfHUcQm8w8X-iPUqiPJmpqJ-CQMR2JWYBFEjDRcd537sreVSAyklyO5Ng5950WYt4d781vWI3R;
-  
-  if (process.env.PAYPAL_ENV === 'live') {
-    return new paypal.core.LiveEnvironment(clientId, clientSecret);
-  }
-  return new paypal.core.SandboxEnvironment(clientId, clientSecret);
-}
-
-function getPaypalClient() {
-  return new paypal.core.PayPalHttpClient(getPaypalEnvironment());
-}
-
-// 1. GENERACIÓN DE CV CON IA GEMINI
+// ENDPOINT GENERADOR DE CV CON IA
 app.post('/api/generate-cv', async (req, res) => {
   try {
-    const { currentCv, jobOffer, targetRole, language } = req.body;
+    const { currentCv, targetRole, language } = req.body;
+    
+    if (!currentCv) {
+      return res.status(400).json({ success: false, error: 'El contenido del CV es obligatorio.' });
+    }
 
-    const prompt = `Actúa como un reclutador experto y optimizador de CVs para filtros ATS. 
-Genera un currículum vitae altamente profesional en idioma ${language || 'Español'} adaptado al rol de ${targetRole}.
+    const prompt = `Actúa como un reclutador experto. Optimiza el siguiente borrador/experiencia de CV para superar los filtros ATS para el puesto objetivo: "${targetRole || 'Profesional'}".
+Idioma de respuesta: ${language || 'Español'}.
 
-CV Actual del Candidato:
+Borrador/Experiencia introducida:
 ${currentCv}
 
-Oferta de Trabajo Objetivo:
-${jobOffer}
-
-Devuelve el resultado en formato HTML estructurado y limpio listo para imprimir o convertir a PDF.`;
+Devuelve un HTML limpio estructurado con etiquetas h2, h3, p, ul, li para renderizar un CV profesional. No incluyas marcas de código markdown ni bloques de triple comilla (```html).`;
 
     const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
     const result = await model.generateContent(prompt);
@@ -60,123 +40,10 @@ Devuelve el resultado en formato HTML estructurado y limpio listo para imprimir 
 
     res.json({ success: true, cvHtml: response.text() });
   } catch (error) {
-    console.error('Error generando CV:', error);
-    res.status(500).json({ success: false, error: 'Error al generar el CV.' });
+    console.error('Error en /api/generate-cv:', error);
+    res.status(500).json({ success: false, error: 'Error al procesar el CV con la IA.' });
   }
-});
-
-// 2. CREACIÓN DE SESIONES DE PAGO (STRIPE, PAYPAL, BIZUM)
-app.post('/api/checkout/create-session', async (req, res) => {
-  try {
-    const { planId, paymentMethod, price } = req.body;
-    const orderId = 'ORD-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-
-    ordersDB.set(orderId, { status: 'PENDING', planId, price, createdAt: new Date() });
-
-    // Stripe / Bizum
-    if (paymentMethod === 'stripe' || paymentMethod === 'bizum') {
-      const allowedTypes = paymentMethod === 'bizum' ? ['bizum'] : ['card'];
-
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types: allowedTypes,
-        line_items: [
-          {
-            price_data: {
-              currency: 'eur',
-              product_data: { name: `Ultimominuto - Plan ${planId}` },
-              unit_amount: Math.round(price * 100),
-            },
-            quantity: 1,
-          },
-        ],
-        mode: planId === 'BASICO' ? 'subscription' : 'payment',
-        success_url: `${req.headers.origin}/?orderId=${orderId}&status=success`,
-        cancel_url: `${req.headers.origin}/?status=cancel`,
-        client_reference_id: orderId,
-      });
-
-      return res.json({ success: true, checkoutUrl: session.url, orderId });
-    }
-
-    // PayPal
-    if (paymentMethod === 'paypal') {
-      const request = new paypal.orders.OrdersCreateRequest();
-      request.prefer('return=representation');
-      request.requestBody({
-        intent: 'CAPTURE',
-        purchase_units: [
-          {
-            reference_id: orderId,
-            amount: { currency_code: 'EUR', value: price.toString() },
-          },
-        ],
-        application_context: {
-          return_url: `${req.headers.origin}/?orderId=${orderId}&status=paypal-success`,
-          cancel_url: `${req.headers.origin}/?status=cancel`,
-        },
-      });
-
-      const order = await getPaypalClient().execute(request);
-      const approveLink = order.result.links.find((link) => link.rel === 'approve').href;
-      return res.json({ success: true, checkoutUrl: approveLink, orderId });
-    }
-
-    res.status(400).json({ error: 'Método de pago no válido' });
-  } catch (err) {
-    console.error('Error en checkout:', err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 3. WEBHOOKS DE VERIFICACIÓN
-app.post('/api/webhooks/stripe', async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-  } catch (err) {
-    console.error(`Error webhook Stripe: ${err.message}`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const orderId = session.client_reference_id;
-    if (orderId && ordersDB.has(orderId)) {
-      ordersDB.get(orderId).status = 'PAID';
-      console.log(`Stripe Webhook: Orden ${orderId} pagada.`);
-    }
-  }
-
-  res.json({ received: true });
-});
-
-app.post('/api/webhooks/paypal-capture', async (req, res) => {
-  const { paypalOrderId, orderId } = req.body;
-  try {
-    const request = new paypal.orders.OrdersCaptureRequest(paypalOrderId);
-    request.requestBody({});
-    const capture = await getPaypalClient().execute(request);
-
-    if (capture.result.status === 'COMPLETED') {
-      if (ordersDB.has(orderId)) {
-        ordersDB.get(orderId).status = 'PAID';
-      }
-      return res.json({ status: 'PAID' });
-    }
-    res.status(400).json({ status: 'FAILED' });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// 4. CONSULTA DE ESTADO
-app.get('/api/order-status/:orderId', (req, res) => {
-  const order = ordersDB.get(req.params.orderId);
-  if (!order) return res.status(404).json({ status: 'NOT_FOUND' });
-  res.json({ status: order.status });
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor ejecutándose en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor de Cvminuto activo en puerto ${PORT}`));
