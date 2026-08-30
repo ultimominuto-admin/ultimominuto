@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -23,15 +22,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// Configuración PayPal Live / Sandbox
 function getPaypalEnvironment() {
-  return new paypal.core.LiveEnvironment(
-    'TU_CLIENT_ID_DE_PAYPAL',
-    'TU_SECRET_KEY_DE_PAYPAL'
-  );
+  const clientId = process.env.PAYPAL_CLIENT_ID;
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  
+  if (process.env.PAYPAL_ENV === 'live') {
+    return new paypal.core.LiveEnvironment(clientId, clientSecret);
+  }
+  return new paypal.core.SandboxEnvironment(clientId, clientSecret);
 }
 
-
-}
 function getPaypalClient() {
   return new paypal.core.PayPalHttpClient(getPaypalEnvironment());
 }
@@ -42,7 +44,7 @@ app.post('/api/generate-cv', async (req, res) => {
     const { currentCv, jobOffer, targetRole, language } = req.body;
 
     const prompt = `Actúa como un reclutador experto y optimizador de CVs para filtros ATS. 
-Genera un currículum vitae altamente profesional en idioma '${language || 'Español'}' adaptado al rol de '${targetRole}'.
+Genera un currículum vitae altamente profesional en idioma ${language || 'Español'} adaptado al rol de ${targetRole}.
 
 CV Actual del Candidato:
 ${currentCv}
@@ -58,7 +60,7 @@ Devuelve el resultado en formato HTML estructurado y limpio listo para imprimir 
 
     res.json({ success: true, cvHtml: response.text() });
   } catch (error) {
-    console.error('Error generando CV con Gemini:', error);
+    console.error('Error generando CV:', error);
     res.status(500).json({ success: false, error: 'Error al generar el CV.' });
   }
 });
@@ -74,17 +76,19 @@ app.post('/api/checkout/create-session', async (req, res) => {
     // Stripe / Bizum
     if (paymentMethod === 'stripe' || paymentMethod === 'bizum') {
       const allowedTypes = paymentMethod === 'bizum' ? ['bizum'] : ['card'];
-      
+
       const session = await stripe.checkout.sessions.create({
         payment_method_types: allowedTypes,
-        line_items: [{
-          price_data: {
-            currency: 'eur',
-            product_data: { name: `Cvminuto - Plan ${planId}` },
-            unit_amount: Math.round(price * 100),
+        line_items: [
+          {
+            price_data: {
+              currency: 'eur',
+              product_data: { name: `Ultimominuto - Plan ${planId}` },
+              unit_amount: Math.round(price * 100),
+            },
+            quantity: 1,
           },
-          quantity: 1,
-        }],
+        ],
         mode: planId === 'BASICO' ? 'subscription' : 'payment',
         success_url: `${req.headers.origin}/?orderId=${orderId}&status=success`,
         cancel_url: `${req.headers.origin}/?status=cancel`,
@@ -97,21 +101,23 @@ app.post('/api/checkout/create-session', async (req, res) => {
     // PayPal
     if (paymentMethod === 'paypal') {
       const request = new paypal.orders.OrdersCreateRequest();
-      request.prefer("return=representation");
+      request.prefer('return=representation');
       request.requestBody({
         intent: 'CAPTURE',
-        purchase_units: [{
-          reference_id: orderId,
-          amount: { currency_code: 'EUR', value: price.toString() }
-        }],
+        purchase_units: [
+          {
+            reference_id: orderId,
+            amount: { currency_code: 'EUR', value: price.toString() },
+          },
+        ],
         application_context: {
           return_url: `${req.headers.origin}/?orderId=${orderId}&status=paypal-success`,
-          cancel_url: `${req.headers.origin}/?status=cancel`
-        }
+          cancel_url: `${req.headers.origin}/?status=cancel`,
+        },
       });
 
       const order = await getPaypalClient().execute(request);
-      const approveLink = order.result.links.find(link => link.rel === 'approve').href;
+      const approveLink = order.result.links.find((link) => link.rel === 'approve').href;
       return res.json({ success: true, checkoutUrl: approveLink, orderId });
     }
 
@@ -130,7 +136,7 @@ app.post('/api/webhooks/stripe', async (req, res) => {
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (err) {
-    console.error(`Error Webhook Stripe: ${err.message}`);
+    console.error(`Error webhook Stripe: ${err.message}`);
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
@@ -139,7 +145,7 @@ app.post('/api/webhooks/stripe', async (req, res) => {
     const orderId = session.client_reference_id;
     if (orderId && ordersDB.has(orderId)) {
       ordersDB.get(orderId).status = 'PAID';
-      console.log(`[Stripe Webhook] Orden ${orderId} pagada.`);
+      console.log(`Stripe Webhook: Orden ${orderId} pagada.`);
     }
   }
 
@@ -152,7 +158,7 @@ app.post('/api/webhooks/paypal-capture', async (req, res) => {
     const request = new paypal.orders.OrdersCaptureRequest(paypalOrderId);
     request.requestBody({});
     const capture = await getPaypalClient().execute(request);
-    
+
     if (capture.result.status === 'COMPLETED') {
       if (ordersDB.has(orderId)) {
         ordersDB.get(orderId).status = 'PAID';
@@ -173,4 +179,4 @@ app.get('/api/order-status/:orderId', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Cvminuto ejecutándose en puerto ${PORT}`));
+app.listen(PORT, () => console.log(`Servidor ejecutándose en puerto ${PORT}`));
