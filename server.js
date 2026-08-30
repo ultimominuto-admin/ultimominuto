@@ -25,8 +25,8 @@ app.get('/', (req, res) => {
 
 // Configuración PayPal Live / Sandbox
 function getPaypalEnvironment() {
-  const clientId = process.env.PAYPAL_CLIENT_ID;
-  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  const clientId = process.env.BAA7nC6u6cTMvfz3EY4cIakGT8J6rxc_ZkHhtCtVuiUMbRBVnkZsoTFeZFjIW6si8B4MskAYKWPIPUowag;
+  const clientSecret = process.env.EM3_oaEfHUcQm8w8X-iPUqiPJmpqJ-CQMR2JWYBFEjDRcd537sreVSAyklyO5Ng5950WYt4d781vWI3R;
   
   if (process.env.PAYPAL_ENV === 'live') {
     return new paypal.core.LiveEnvironment(clientId, clientSecret);
