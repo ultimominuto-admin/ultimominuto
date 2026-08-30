@@ -23,12 +23,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
-// Configuración PayPal SDK
 function getPaypalEnvironment() {
-  return process.env.PAYPAL_MODE === 'live'
-    ? new paypal.core.LiveEnvironment(process.env.PAYPAL_CLIENT_ID, process.env.PAYPAL_CLIENT_SECRET)
-    : new paypal.core.SandboxEnvironment(process.env.PAYPAL_CLIENT_ID, process.env.PAYPAL_CLIENT_SECRET);
+  return new paypal.core.LiveEnvironment(
+    'TU_CLIENT_ID_DE_PAYPAL',
+    'TU_SECRET_KEY_DE_PAYPAL'
+  );
+}
+
+
 }
 function getPaypalClient() {
   return new paypal.core.PayPalHttpClient(getPaypalEnvironment());
