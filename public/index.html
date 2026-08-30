@@ -1,331 +1,238 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cvminuto — Tu Currículum Perfecto y Optimizado con IA en un Minuto</title>
-  <meta name="description" content="Crea tu curriculum vitae online optimizado para superar los filtros ATS de RRHH con inteligencia artificial. Descarga inmediata en PDF.">
-  <meta name="keywords" content="crear curriculum vitae online, hacer cv con inteligencia artificial, plantillas cv gratis profesional, optimizar curriculum para ATS, cvminuto">
+  <title>Cvminuto - Editor de CV Profesional estilo Canva</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              bg: '#F8FAFC',
-              text: '#0D0D0D',
-              dark: '#1E293B',
-              primary: '#0F4C81',
-              accent: '#2563EB',
-              success: '#10B981',
-            }
-          }
-        }
-      }
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Hoja A4 Simulada */
+    .a4-canvas {
+      width: 210mm;
+      min-height: 297mm;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
     }
-  </script>
+    @media print {
+      body * { visibility: hidden; }
+      #cv-preview, #cv-preview * { visibility: visible; }
+      #cv-preview { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; }
+      .no-print { display: none !important; }
+    }
+    .tab-btn.active { background-color: #f1f5f9; color: #2563eb; font-weight: bold; }
+  </style>
 </head>
-<body class="bg-brand-bg text-brand-text font-sans antialiased">
+<body class="bg-slate-200 text-slate-800 font-sans min-h-screen flex flex-col">
 
-  <!-- Header -->
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-2">
-        <span class="text-2xl font-black tracking-tight text-brand-primary">Cv<span class="text-brand-accent">minuto</span></span>
+  <!-- Header Superior Estilo Canva -->
+  <header class="bg-slate-900 text-white h-14 px-4 flex items-center justify-between z-30 no-print">
+    <div class="flex items-center space-x-3">
+      <div class="bg-gradient-to-r from-blue-500 to-indigo-500 p-1.5 rounded-lg">
+        <i class="fa-solid fa-file-invoice text-white text-lg"></i>
       </div>
-      <nav class="hidden md:flex space-x-8 text-sm font-medium text-gray-700">
-        <a href="#inicio" class="hover:text-brand-primary">Inicio</a>
-        <a href="#quienes-somos" class="hover:text-brand-primary">Quiénes Somos</a>
-        <a href="#precios" class="hover:text-brand-primary">Precios</a>
-        <a href="#faq" class="hover:text-brand-primary">Preguntas Frecuentes</a>
-      </nav>
-      <div class="flex space-x-3">
-        <button class="px-4 py-2 text-sm font-medium text-gray-700 hover:text-brand-primary">Iniciar Sesión</button>
-        <a href="#crear-cv" class="px-4 py-2 text-sm font-medium text-white bg-brand-primary rounded-lg hover:bg-brand-accent transition">Crear CV Ahora</a>
-      </div>
+      <span class="font-bold text-lg tracking-wide">Cvminuto <span class="text-xs bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded-full border border-blue-400/30">Editor Studio</span></span>
+    </div>
+
+    <div class="flex items-center space-x-3">
+      <button onclick="openCheckoutModal()" class="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-bold text-xs px-4 py-2 rounded-lg transition flex items-center gap-2 shadow-lg">
+        <i class="fa-solid fa-crown text-amber-300"></i> Descargar PDF Pro
+      </button>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section id="inicio" class="py-16 md:py-24 bg-gradient-to-b from-white to-brand-bg">
-    <div class="max-w-5xl mx-auto px-4 text-center">
-      <span class="bg-blue-50 text-brand-primary text-xs font-semibold px-3 py-1 rounded-full border border-blue-200 uppercase tracking-wider">Optimización ATS con IA Gemini</span>
-      <h1 class="mt-4 text-4xl sm:text-5xl font-extrabold text-brand-text tracking-tight leading-tight">
-        Tu Currículum Perfecto y Optimizado con IA en un Minuto
-      </h1>
-      <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
-        Supera los filtros automáticos de los departamentos de Selección. Adapta tu perfil profesional exactamente a la oferta de trabajo que buscas.
-      </p>
-    </div>
-  </section>
+  <!-- Área de Trabajo (Workspace) -->
+  <div class="flex flex-1 overflow-hidden">
 
-  <!-- Formulario de Optimización por IA -->
-  <section id="crear-cv" class="max-w-4xl mx-auto px-4 -mt-8 mb-16">
-    <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100">
-      <h2 class="text-2xl font-bold text-gray-900 mb-6">Generador de CV de Alto Impacto</h2>
-      <form id="cv-form" class="space-y-6">
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Tu CV Actual (copia y pega tu texto o datos principales)</label>
-          <textarea id="currentCv" rows="4" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none" placeholder="Pega aquí tu experiencia, educación y habilidades actuales..."></textarea>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Oferta de Trabajo Objetivo</label>
-          <textarea id="jobOffer" rows="3" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none" placeholder="Pega aquí el texto de la oferta de trabajo para adaptar las palabras clave..."></textarea>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Rol / Puesto Objetivo</label>
-            <input type="text" id="targetRole" required class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none" placeholder="Ej: Desarrollador Full Stack">
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Idioma de Salida</label>
-            <select id="language" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-primary focus:border-transparent outline-none">
-              <option value="Español">Español</option>
-              <option value="Inglés">Inglés</option>
-              <option value="Francés">Francés</option>
-              <option value="Alemán">Alemán</option>
-            </select>
-          </div>
-        </div>
-        <button type="submit" id="submit-btn" class="w-full py-4 text-white bg-brand-accent font-bold rounded-lg hover:bg-brand-primary transition shadow-md">
-          Generar y Optimizar Currículum Ahora
-        </button>
-      </form>
+    <!-- Sidebar de Herramientas Estilo Canva -->
+    <aside class="w-16 bg-slate-900 border-t border-slate-800 flex flex-col items-center py-4 space-y-6 text-slate-400 no-print z-20">
+      <button onclick="switchTab('datos')" id="btn-tab-datos" class="tab-btn active p-3 rounded-xl hover:text-white transition flex flex-col items-center text-[10px] gap-1 w-12">
+        <i class="fa-solid fa-user text-base"></i> Datos
+      </button>
+      <button onclick="switchTab('ia')" id="btn-tab-ia" class="tab-btn p-3 rounded-xl hover:text-white transition flex flex-col items-center text-[10px] gap-1 w-12">
+        <i class="fa-solid fa-wand-magic-sparkles text-base text-purple-400"></i> IA Magic
+      </button>
+      <button onclick="switchTab('diseno')" id="btn-tab-diseno" class="tab-btn p-3 rounded-xl hover:text-white transition flex flex-col items-center text-[10px] gap-1 w-12">
+        <i class="fa-solid fa-palette text-base"></i> Estilo
+      </button>
+    </aside>
 
-      <!-- Previsualización -->
-      <div id="preview-section" class="hidden mt-8 p-6 bg-gray-50 rounded-xl border border-gray-200">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Vista Previa de tu CV Optimizado</h3>
-        <div id="cv-output" class="prose max-w-none bg-white p-6 border rounded-lg shadow-sm"></div>
-        <div class="mt-6 flex justify-end">
-          <a href="#precios" class="px-6 py-3 bg-brand-success text-white font-bold rounded-lg hover:bg-green-600 transition">
-            Desbloquear Descarga Completa
-          </a>
+    <!-- Panel Lateral de Edición -->
+    <div class="w-96 bg-white border-r border-slate-300 p-6 overflow-y-auto no-print z-10 shadow-sm">
+      
+      <!-- Tab 1: Datos Personales -->
+      <div id="panel-datos" class="space-y-4">
+        <h2 class="text-base font-bold text-slate-900 border-b pb-2">Información Personal</h2>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Nombre Completo</label>
+          <input type="text" id="fullName" oninput="updateCanvas()" placeholder="Ej. Ana Martínez" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Puesto o Especialidad</label>
+          <input type="text" id="jobTitle" oninput="updateCanvas()" placeholder="Ej. Diseñadora Gráfica / UX" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Correo Electrónico</label>
+          <input type="email" id="email" oninput="updateCanvas()" placeholder="ana.martinez@email.com" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Teléfono</label>
+          <input type="text" id="phone" oninput="updateCanvas()" placeholder="+34 600 000 000" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm">
         </div>
       </div>
-    </div>
-  </section>
 
-  <!-- Quiénes Somos -->
-  <section id="quienes-somos" class="py-16 bg-white border-t border-b border-gray-100">
-    <div class="max-w-5xl mx-auto px-4">
-      <div class="text-center mb-12">
-        <h2 class="text-3xl font-bold text-brand-dark">Quiénes Somos y Qué Hacemos</h2>
-        <p class="mt-3 text-gray-600">Democratizando la selección de personal con tecnología de Inteligencia Artificial accesible.</p>
-      </div>
-      <div class="grid md:grid-cols-2 gap-8 items-center">
-        <div class="space-y-4">
-          <p class="text-gray-700 leading-relaxed">
-            En <strong>Cvminuto</strong> utilizamos la potencia de la Inteligencia Artificial Gemini para analizar los patrones de búsqueda de los reclutadores y los sistemas ATS (Applicant Tracking Systems).
-          </p>
-          <p class="text-gray-700 leading-relaxed">
-            Nuestra misión es ayudar a cualquier profesional a presentar su perfil de la forma más atractiva, clara y optimizada posible en cuestión de segundos y a un coste simbólico.
-          </p>
-        </div>
-        <div class="bg-blue-50 p-6 rounded-2xl border border-blue-100 space-y-3">
-          <div class="flex items-center space-x-3">
-            <span class="text-brand-success text-xl">✓</span>
-            <span class="font-medium text-gray-800">Superación de Filtros Automáticos ATS</span>
-          </div>
-          <div class="flex items-center space-x-3">
-            <span class="text-brand-success text-xl">✓</span>
-            <span class="font-medium text-gray-800">Generación Inmediata en PDF</span>
-          </div>
-          <div class="flex items-center space-x-3">
-            <span class="text-brand-success text-xl">✓</span>
-            <span class="font-medium text-gray-800">Verificación de Pago 100% Segura</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Catálogo de Precios y Pasarelas -->
-  <section id="precios" class="py-16 max-w-6xl mx-auto px-4">
-    <div class="text-center mb-12">
-      <h2 class="text-3xl font-bold text-brand-dark">Planes y Precios Transparentes</h2>
-      <p class="mt-2 text-gray-600">Sin costes ocultos. Selección rápida con verificación inmediata por Webhook.</p>
-    </div>
-
-    <div class="grid md:grid-cols-3 gap-8">
-      <!-- Plan 1: Creación de CV -->
-      <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 flex flex-col justify-between">
+      <!-- Tab 2: Inteligencia Artificial -->
+      <div id="panel-ia" class="space-y-4 hidden">
+        <h2 class="text-base font-bold text-slate-900 border-b pb-2 flex items-center gap-2">
+          <i class="fa-solid fa-wand-magic-sparkles text-purple-600"></i> Generador con IA
+        </h2>
+        <p class="text-xs text-slate-500">Introduce tus experiencia previa o borrador sin formato. La IA estructurará y redactará el CV en tu lienzo.</p>
         <div>
-          <h3 class="text-xl font-bold text-gray-900">Creación de CV</h3>
-          <p class="text-sm text-gray-500 mt-1">Pago Único</p>
-          <div class="mt-4 text-4xl font-black text-brand-primary">0.99 €</div>
-          <ul class="mt-6 space-y-3 text-sm text-gray-600">
-            <li>✓ Optimización por IA Gemini</li>
-            <li>✓ 1 Currículum adaptado</li>
-            <li>✓ Descarga inmediata PDF</li>
-          </ul>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Tu Trayectoria / Experiencia</label>
+          <textarea id="rawExperience" rows="7" class="w-full p-2.5 border border-slate-300 rounded-lg text-sm" placeholder="Trabajé 3 años en atención al cliente, organizaba inventarios y manejaba caja..."></textarea>
         </div>
-        <button onclick="checkout('CV_SINGLE', 0.99)" class="mt-8 w-full py-3 bg-brand-primary text-white font-bold rounded-lg hover:bg-brand-accent transition">
-          Seleccionar Plan
+        <button type="button" onclick="generateWithAI()" id="btn-ai" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 rounded-lg text-sm transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-bolt"></i> Optimizar CV
         </button>
       </div>
 
-      <!-- Plan 2: Suscripción Básica -->
-      <div class="bg-white p-8 rounded-2xl shadow-xl border-2 border-brand-accent flex flex-col justify-between relative">
-        <span class="absolute -top-3 right-6 bg-brand-accent text-white text-xs font-bold px-3 py-1 rounded-full uppercase">Más Popular</span>
+      <!-- Tab 3: Estilo -->
+      <div id="panel-diseno" class="space-y-4 hidden">
+        <h2 class="text-base font-bold text-slate-900 border-b pb-2">Personalización</h2>
         <div>
-          <h3 class="text-xl font-bold text-gray-900">Suscripción BÁSICA</h3>
-          <p class="text-sm text-gray-500 mt-1">Recurrente Mensual</p>
-          <div class="mt-4 text-4xl font-black text-brand-accent">1.99 € <span class="text-sm font-normal text-gray-500">/mes</span></div>
-          <ul class="mt-6 space-y-3 text-sm text-gray-600">
-            <li>✓ Acceso Ilimitado</li>
-            <li>✓ Generación constante de CVs</li>
-            <li>✓ Almacenamiento en panel personal</li>
-          </ul>
+          <label class="block text-xs font-semibold text-slate-600 mb-2">Color Principal</label>
+          <div class="flex gap-3">
+            <button onclick="setColor('#1e3a8a')" class="w-8 h-8 rounded-full bg-blue-900 border-2 border-white shadow"></button>
+            <button onclick="setColor('#0f766e')" class="w-8 h-8 rounded-full bg-teal-700 border-2 border-white shadow"></button>
+            <button onclick="setColor('#4c1d95')" class="w-8 h-8 rounded-full bg-purple-900 border-2 border-white shadow"></button>
+            <button onclick="setColor('#0f172a')" class="w-8 h-8 rounded-full bg-slate-900 border-2 border-white shadow"></button>
+          </div>
         </div>
-        <button onclick="checkout('BASICO', 1.99)" class="mt-8 w-full py-3 bg-brand-accent text-white font-bold rounded-lg hover:bg-brand-primary transition">
-          Iniciar Suscripción
+      </div>
+
+    </div>
+
+    <!-- Lienzo de Vista Previa A4 Centrado -->
+    <main class="flex-1 overflow-y-auto p-8 flex justify-center items-start bg-slate-200">
+      <div id="cv-preview" class="a4-canvas bg-white p-12 rounded-sm border border-slate-300 transition-all">
+        <!-- Encabezado del CV -->
+        <div class="border-b-2 border-blue-900 pb-6 mb-6" id="cv-header-block">
+          <h1 id="pv-name" class="text-3xl font-black text-blue-900 uppercase tracking-tight">Ana Martínez</h1>
+          <p id="pv-title" class="text-sm font-bold text-slate-500 uppercase tracking-wider mt-1">Diseñadora Gráfica / UX</p>
+          <div id="pv-contact" class="text-xs text-slate-500 mt-3 flex gap-4">
+            <span><i class="fa-solid fa-envelope mr-1"></i> <span id="pv-email">ana.martinez@email.com</span></span>
+            <span><i class="fa-solid fa-phone mr-1"></i> <span id="pv-phone">+34 600 000 000</span></span>
+          </div>
+        </div>
+
+        <!-- Contenido Dinámico generado por IA -->
+        <div id="pv-body" class="text-sm text-slate-700 leading-relaxed space-y-4">
+          <h2 class="text-base font-bold text-blue-900 border-b border-slate-200 pb-1 uppercase">Perfil Profesional</h2>
+          <p class="text-slate-500 text-xs italic">Usa el panel lateral con la IA para generar el contenido completo de tus experiencias, habilidades y formación.</p>
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Modal Checkout / Pago Pro -->
+  <div id="checkout-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+      <button onclick="closeCheckoutModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <div class="text-center mb-6">
+        <div class="bg-amber-100 text-amber-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">
+          <i class="fa-solid fa-crown"></i>
+        </div>
+        <h3 class="text-xl font-bold text-slate-900">Descarga tu CV en Alta Calidad</h3>
+        <p class="text-xs text-slate-500 mt-1">Sin marcas de agua y en formato listo para enviar a empresas.</p>
+      </div>
+
+      <div class="space-y-3">
+        <button onclick="processPayment('paypal', 9.99, 'PACK_PRO')" class="w-full bg-yellow-400 hover:bg-yellow-500 text-slate-900 font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2">
+          <i class="fa-brands fa-paypal"></i> Pagar con PayPal (9.99€)
+        </button>
+        <button onclick="processPayment('stripe', 9.99, 'PACK_PRO')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl text-sm transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-credit-card"></i> Pagar con Tarjeta (9.99€)
+        </button>
+        <button onclick="processPayment('bizum', 9.99, 'PACK_PRO')" class="w-full bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 rounded-xl text-sm transition">
+          Pagar con Bizum (9.99€)
         </button>
       </div>
-
-      <!-- Plan 3: Pack Pro Completo -->
-      <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-200 flex flex-col justify-between">
-        <div>
-          <h3 class="text-xl font-bold text-gray-900">Pack Pro Completo</h3>
-          <p class="text-sm text-gray-500 mt-1">Pago Único</p>
-          <div class="mt-4 text-4xl font-black text-brand-primary">3.99 €</div>
-          <ul class="mt-6 space-y-3 text-sm text-gray-600">
-            <li>✓ CV Optimizado</li>
-            <li>✓ Carta de Presentación a medida</li>
-            <li>✓ Guía de preparación de entrevista</li>
-          </ul>
-        </div>
-        <button onclick="checkout('PRO_PACK', 3.99)" class="mt-8 w-full py-3 bg-brand-primary text-white font-bold rounded-lg hover:bg-brand-accent transition">
-          Obtener Pack Pro
-        </button>
-      </div>
     </div>
-
-    <!-- Selección de Método de Pago -->
-    <div id="payment-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white p-6 rounded-2xl max-w-md w-full">
-        <h3 class="text-lg font-bold text-gray-900 mb-4">Selecciona tu método de pago</h3>
-        <div class="space-y-3">
-          <button onclick="processPayment('stripe')" class="w-full p-3 border border-gray-300 rounded-lg flex items-center justify-between hover:bg-gray-50">
-            <span class="font-medium">Tarjeta de Crédito / Débito</span>
-            <span class="text-xs bg-gray-100 px-2 py-1 rounded">Visa / Mastercard</span>
-          </button>
-          <button onclick="processPayment('paypal')" class="w-full p-3 border border-gray-300 rounded-lg flex items-center justify-between hover:bg-blue-50">
-            <span class="font-medium text-blue-700">PayPal</span>
-            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">Pago Rápido</span>
-          </button>
-          <button onclick="processPayment('bizum')" class="w-full p-3 border border-gray-300 rounded-lg flex items-center justify-between hover:bg-teal-50">
-            <span class="font-medium text-teal-700">Bizum</span>
-            <span class="text-xs bg-teal-100 text-teal-800 px-2 py-1 rounded">Instantáneo</span>
-          </button>
-        </div>
-        <button onclick="closePaymentModal()" class="mt-4 w-full py-2 text-sm text-gray-500 hover:text-gray-800">Cancelar</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pie de Página SEO (Footer Completo) -->
-  <footer class="bg-brand-dark text-gray-300 pt-12 pb-8 border-t border-gray-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-        <div>
-          <h4 class="text-white font-bold mb-4">Herramientas</h4>
-          <ul class="space-y-2 text-sm">
-            <li><a href="#crear-cv" class="hover:text-white">Creador de CV con IA</a></li>
-            <li><a href="#" class="hover:text-white">Optimizador ATS</a></li>
-            <li><a href="#" class="hover:text-white">Carta de Presentación</a></li>
-            <li><a href="#" class="hover:text-white">Simulador de Entrevistas</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="text-white font-bold mb-4">Plantillas y Formatos</h4>
-          <ul class="space-y-2 text-sm">
-            <li><a href="#" class="hover:text-white">Plantillas CV Modernas</a></li>
-            <li><a href="#" class="hover:text-white">Formatos PDF para CV</a></li>
-            <li><a href="#" class="hover:text-white">Ejemplos por Profesión</a></li>
-            <li><a href="#" class="hover:text-white">CV sin experiencia</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="text-white font-bold mb-4">Recursos de Empleo</h4>
-          <ul class="space-y-2 text-sm">
-            <li><a href="#" class="hover:text-white">Consejos para Entrevistas</a></li>
-            <li><a href="#" class="hover:text-white">Cómo hacer un CV sin experiencia</a></li>
-            <li><a href="#" class="hover:text-white">Errores comunes en el CV</a></li>
-            <li><a href="#" class="hover:text-white">Blog de Empleabilidad</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="text-white font-bold mb-4">Sobre Cvminuto</h4>
-          <ul class="space-y-2 text-sm">
-            <li><a href="#quienes-somos" class="hover:text-white">Quiénes Somos</a></li>
-            <li><a href="#" class="hover:text-white">Garantía de Pago Seguro</a></li>
-            <li><a href="#" class="hover:text-white">Soporte y Contacto</a></li>
-            <li><a href="#" class="hover:text-white">Términos y Privacidad</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="pt-8 border-t border-gray-800 text-center text-xs text-gray-500">
-        <p>&copy; 2026 Cvminuto. Todos los derechos reservados. Plataforma de generación de currículums optimizados mediante inteligencia artificial.</p>
-      </div>
-    </div>
-  </footer>
+  </div>
 
   <script>
-    let selectedPlan = null;
-    let selectedPrice = null;
+    function switchTab(tab) {
+      ['datos', 'ia', 'diseno'].forEach(t => {
+        document.getElementById(`panel-${t}`).classList.add('hidden');
+        document.getElementById(`btn-tab-${t}`).classList.remove('active');
+      });
+      document.getElementById(`panel-${tab}`).classList.remove('hidden');
+      document.getElementById(`btn-tab-${tab}`).classList.add('active');
+    }
 
-    document.getElementById('cv-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('submit-btn');
-      btn.innerText = 'Generando con IA Gemini...';
+    function updateCanvas() {
+      document.getElementById('pv-name').innerText = document.getElementById('fullName').value || 'Ana Martínez';
+      document.getElementById('pv-title').innerText = document.getElementById('jobTitle').value || 'Diseñadora Gráfica / UX';
+      document.getElementById('pv-email').innerText = document.getElementById('email').value || 'ana.martinez@email.com';
+      document.getElementById('pv-phone').innerText = document.getElementById('phone').value || '+34 600 000 000';
+    }
+
+    function setColor(hex) {
+      document.getElementById('pv-name').style.color = hex;
+      document.getElementById('cv-header-block').style.borderColor = hex;
+    }
+
+    async function generateWithAI() {
+      const rawText = document.getElementById('rawExperience').value;
+      if (!rawText.trim()) return alert('Escribe tu experiencia antes de continuar.');
+
+      const btn = document.getElementById('btn-ai');
       btn.disabled = true;
-
-      const payload = {
-        currentCv: document.getElementById('currentCv').value,
-        jobOffer: document.getElementById('jobOffer').value,
-        targetRole: document.getElementById('targetRole').value,
-        language: document.getElementById('language').value
-      };
+      btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Procesando...';
 
       try {
         const res = await fetch('/api/generate-cv', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({ currentCv: rawText, targetRole: document.getElementById('jobTitle').value })
         });
         const data = await res.json();
-        if(data.success) {
-          document.getElementById('cv-output').innerHTML = data.cvHtml;
-          document.getElementById('preview-section').classList.remove('hidden');
+        if (data.success) {
+          document.getElementById('pv-body').innerHTML = data.cvHtml;
+        } else {
+          alert('Error: ' + data.error);
         }
-      } catch (err) {
-        alert('Error al generar CV');
+      } catch (e) {
+        alert('No se pudo conectar con el servidor de la IA.');
       } finally {
-        btn.innerText = 'Generar y Optimizar Currículum Ahora';
         btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-bolt"></i> Optimizar CV';
       }
-    });
-
-    function checkout(planId, price) {
-      selectedPlan = planId;
-      selectedPrice = price;
-      document.getElementById('payment-modal').classList.remove('hidden');
     }
 
-    function closePaymentModal() {
-      document.getElementById('payment-modal').classList.add('hidden');
+    function openCheckoutModal() {
+      document.getElementById('checkout-modal').classList.remove('hidden');
+      document.getElementById('checkout-modal').classList.add('flex');
     }
 
-    async function processPayment(paymentMethod) {
-      const res = await fetch('/api/checkout/create-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planId: selectedPlan, price: selectedPrice, paymentMethod })
-      });
-      const data = await res.json();
-      if(data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+    function closeCheckoutModal() {
+      document.getElementById('checkout-modal').classList.add('hidden');
+      document.getElementById('checkout-modal').classList.remove('flex');
+    }
+
+    async function processPayment(paymentMethod, price, planId) {
+      try {
+        const res = await fetch('/api/checkout/create-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ paymentMethod, price, planId })
+        });
+        const data = await res.json();
+        if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+        else alert('Error al generar sesión de pago.');
+      } catch (e) {
+        alert('Error al conectar con la pasarela.');
       }
     }
   </script>
